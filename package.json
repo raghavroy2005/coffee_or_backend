@@ -1,0 +1,15 @@
+{
+  "name": "coffee_or_backend",
+  "version": "1.0.0",
+  "description": "this is my first backend project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "author": "raghav kumar",
+  "license": "ISC"
+}
