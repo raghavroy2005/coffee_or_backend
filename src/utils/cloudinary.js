@@ -6,7 +6,7 @@ cloudinary.config({
     api_key: 'process.env.CLOUDINARY_API_key', 
     api_secret: 'process.env.CLOUDINARY_API_SECRET'
   
-});
+}); 
 
 const uplodeOnCloudinary = async (localFilePath) => {
     try {
@@ -14,7 +14,6 @@ const uplodeOnCloudinary = async (localFilePath) => {
         // uplode the file on cloudinary
         const responce = await cloudinary.uploader.upload
         (localFilePath, {resource_type: "auto"
-
         })
         //file has uploded successfull
         console.log("file is uploded on cloudinary",
