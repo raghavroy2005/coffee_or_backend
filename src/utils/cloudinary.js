@@ -9,6 +9,7 @@ cloudinary.config({
 }); 
 
 const uplodeOnCloudinary = async (localFilePath) => {
+    
     try {
         if(!localFilePath) return null
         // uplode the file on cloudinary
@@ -21,12 +22,14 @@ const uplodeOnCloudinary = async (localFilePath) => {
         return responce;
 
     } catch (error) {
-         
-        fs.unlinkSync(localFilePath)
+        
         // remove the locailly saved temporary file as the
         // uplode operated got failed
+        fs.unlinkSync(localFilePath)
         return null;
          
     }
 
 }
+
+export {uplodeOnCloudinary}
