@@ -1,7 +1,7 @@
 
-
 import multer from "multer";
 
+// multer is use to uplode file from client to server
 const storage = multer.diskStorage({
     destination: function(req,file,cb) {
         cb(null, "./public/temp")

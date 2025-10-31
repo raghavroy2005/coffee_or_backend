@@ -1,3 +1,5 @@
+//async handler to handle error in async function
+
 
 const asyncHandler = (requestHandler) => {
  return (req,res,next) =>{

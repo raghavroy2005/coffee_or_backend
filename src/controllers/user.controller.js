@@ -18,21 +18,23 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     // return res
 
 
-
     // it store date in req.body server
-    const {fullName, email,username, password} = req.body
-    console.log("email:", email);
+    const {fullname, email,username, password} = req.body;
+    console.log(req.body);
+
+
 
     // all fields are required
     if(
-        [fullName,email,username,password].some((field) => 
+        [fullname , email, username, password].some((field) => 
         field?.trim() === "" )
     ) {
         throw new ApiError(400," All file are required")
     }
 
+
     // it find user exist or not
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
 
@@ -40,18 +42,27 @@ import { ApiResponse } from "../utils/ApiResponse.js";
         throw new ApiError(409, "User with email or username already exists")
     }
     
+
+
     // how to store avatar and coverImage 
     // due to cause of multer we have we have req.files or req.file
     // ?. this is optional changing if file exist access it otherwis
     //  give undefine ott error
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+   /// const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    
+   let coverImageLocalPath ;
+   if(req.files && Array.isArray(req.files.coverImage) && 
+   req.files.coverImage.length > 0){
+        coverImageLocalPath = req.files.coverImage[0].path
+   }
 
     if(!avatarLocalPath){
         throw new ApiError(400, "Avatar files is required")
     }
 
+    
     // uplode avatar on cloudinary
     const avatar = await uplodeOnCloudinary(avatarLocalPath)
     const coverImage = await uplodeOnCloudinary(coverImageLocalPath)
@@ -62,16 +73,16 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
     // create user object and store in db
     const user = await User.create({
-        fullName,
+        fullname,
         avatar: avatar.url,
         coverImage: coverImage?.url || "",
-        email,
+        email : String(email).trim().toLowerCase(),
         password,
-        username: username.toLowerCase()
+        username: username.toLowerCase(),
     })
 
     // remove password and refresh token from response
-    const createdUser = User.findById(user.id).select(
+    const createdUser = await User.findById(user.id).select(
         "-password -refreshToken"
     )
 
@@ -88,6 +99,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
  })
 
-export {registerUser};
 
+export {registerUser};
   
