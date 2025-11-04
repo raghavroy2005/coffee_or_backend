@@ -6,6 +6,22 @@ import {uplodeOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 
+// helper function to generate access and refresh token
+const generateAccessAndRefreshToken = async (userId) => {
+    try{
+        const user = User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+        user.refreshToken = refreshToken
+        await user.save({validateBeforeSave:false})
+
+        return {accessToken, refreshToken}
+    }catch (erroer){
+        throw new ApiError(500, "Something went wrong while generating tokens")
+    }
+}
+
+// register user controller
  const registerUser = asyncHandler (async (req, res) => {
     // get user details from frontend
     // validation - not empty
@@ -21,7 +37,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     // it store date in req.body server
     const {fullname, email,username, password} = req.body;
     console.log(req.body);
-
+ 
 
 
     // all fields are required
@@ -47,7 +63,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     // how to store avatar and coverImage 
     // due to cause of multer we have we have req.files or req.file
     // ?. this is optional changing if file exist access it otherwis
-    //  give undefine ott error
+    //  give undefine not  error
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
    /// const coverImageLocalPath = req.files?.coverImage[0]?.path;
@@ -99,6 +115,99 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
  })
 
+// login user controller
+const loginUser = asyncHandler(async (req, res) =>{
+    //req body -> data
+    // username or email
+    //find the user
+    //password check
+    //access and refresh token
+    //send cookie 
 
-export {registerUser};
+    const {email, username, password} = req.body;
+
+    // validation
+    if(!username || !email){
+        throw new ApiError(400, "username or email is required")
+    }
+
+    // find the user
+    const user = await User.findOne({
+        $or: [{username},{email}]
+    })
+
+    // check for user existence
+    if(!user){
+        throw new ApiError(404,"User does not exist")
+    }
+
+    // check for password
+    const isPasswordValid = await user.isPasswordCorrect
+    (password)
+
+    // invalid password
+    if(!isPasswordValid){
+        throw new ApiError(401, "Invalid user credentials")
+    } 
+
+    // generate access and refresh token
+    const {accessToken, refreshToken} = await 
+    generateAccessAndRefreshToken(user.id)
+
+    //  set cookie
+    const loggedInUser = await User.findById(user._id).
+    select("-password -refreshToken")
+
+    // send response
+    const options = {
+        httpOnly:true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, options)
+    .json(
+        new ApiResponse(
+            200,
+            {
+                user: loggedInUser,
+                accessToken,
+                refreshToken,
+            },
+            "User logged in successfully"
+        )
+    )
+
+ })
+
+ // logout user controller can be added here
+const logoutUser = asyncHandler (async (req, res) => {
+    // get refresh token from cookies
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined}
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly:true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(200, {}, "User logged out successfully")
+    )
+})
+export {registerUser,loginUser, logoutUser};
   
